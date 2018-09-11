@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+">
+
+    <!--多视图解析器-->
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <!--支持参数匹配-->
+        <property name="favorParameter" value="true"/>
+        <!--默认为html匹配-->
+        <property name="defaultContentType" value="text/html"/>
+        <!--根据url后缀匹配-->
+        <property name="mediaTypes">
+            <map>
+                <entry key="html" value="text/html;charset=utf-8"/>
+                <entry key="json" value="application/json;charset=utf-8"/>
+                <entry key="xml" value="application/xml;charset=utf-8"/>
+            </map>
+        </property>
+
+        <property name="viewResolvers">
+            <list>
+                <!--视图解析器-->
+                <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                    <property name="prefix" value="/WEB-INF/jsps/"/>
+                    <property name="suffix" value=".jsp"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <!--注解支持 包扫描-->
+    <context:component-scan base-package="com.appinfo.controller"/>
+
+    <!--自动配置映射DefaultAnnotationHandlerMapping组件 和 Adapter-->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <!--解决json乱码 系统提供 配置类StringHttpMessageConverter-->
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json;charset=utf-8</value>
+                        <value>text/html;charset=utf-8</value>
+                    </list>
+                </property>
+            </bean>
+
+            <!--json消息转换器 阿里巴巴提供 FastJsonHttpMessageConverter 解决json数据乱码 以及日期乱码-->
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=utf-8</value>
+                        <value>application/json</value>
+                    </list>
+                </property>
+                <property name="features">
+                    <list>
+                        <value>WriteDateUseDateFormat</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!-- org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler，
+    它会像一个检查员，对进入DispatcherServlet的URL进行筛查，如果发现是静态资源的请求，
+    就将该请求转由Web应用服务器默认的Servlet处理，如果不是静态资源的请求，才由DispatcherServlet继续处理。 -->
+    <mvc:default-servlet-handler/>
+
+    <!--全局异常注入类-->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <prop key="java.lang.RuntimeException">redirect:/403.jsp</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--上传文件注入类 multipartResolver-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="500000"/>
+        <property name="defaultEncoding" value="utf-8"/>
+    </bean>
+
+
+ <!--  &lt;!&ndash;SSM拦截器&ndash;&gt;
+    <mvc:interceptors>
+        &lt;!&ndash; 配置登陆拦截器 &ndash;&gt;
+        <mvc:interceptor>
+            <mvc:mapping path="/*"/>
+            <bean class="com.appinfo.interceptors.LoginHandlerIntercepter"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>-->
+</beans>
